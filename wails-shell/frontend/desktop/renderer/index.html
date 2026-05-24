@@ -1,0 +1,1202 @@
+﻿<!-- Active desktop HTML template shell. -->
+<!--
+  ============================================================
+  index.template.html - 前端HTML模板壳
+  ============================================================
+  作用: 定义全局页面骨架(导航栏、背景、光效)，不含三大板块的具体内容。
+  
+  组装流程: scripts/assemble-html.js 读取此模板，
+           将6个 {placeholder} 替换为 partials/ 目录下的实际内容，
+           生成最终的 index.html。
+  
+  布局结构:
+    workspace-shell > workspace-content
+      ├── nav.workspace-topbar  (顶部导航，三标签切换)
+      ├── [CRAWLER_HERO]  → partials/crawler-hero.html  (爬虫头部)
+      ├── [CRAWLER_BODY]  → partials/crawler-body.html  (爬虫主体)
+      ├── [ORGANIZER_HERO] → partials/organizer-hero.html (整理头部)
+      ├── [ORGANIZER_BODY] → partials/organizer-body.html (整理主体)
+      ├── [SUBSCRIPTION_HERO] → partials/subscription-hero.html (订阅头部)
+      └── [SUBSCRIPTION_BODY] → partials/subscription-body.html (订阅主体)
+  
+  交互逻辑:
+    - 三大板块通过 workspace-pane.hidden 控制显隐
+    - renderer.js 监听 #nav-crawler / #nav-organizer / #nav-subscription 点击切换
+    - 单页应用(SPA)模式，无路由跳转
+  
+  依赖: styles.css (12个CSS合并) + bundle.js (18个JS合并)
+-->
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JAV自动集成源</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <!-- 全页面装饰层：背景、噪点、双色光晕 -->
+    <div class="page-backdrop"></div>
+    <div class="page-noise"></div>
+    <div class="page-glow glow-coral"></div>
+    <div class="page-glow glow-cyan"></div>
+
+    <!-- .shell 是最外层容器，承载所有UI -->
+    <div class="shell">
+      <div class="workspace-shell">
+        <!--
+          顶部导航栏
+          - .workspace-topbar-brand: 产品名称
+          - .workspace-topbar-tabs: 三个标签按钮
+            #nav-crawler / #nav-organizer / #nav-subscription
+          - .is-active 标记当前激活标签
+        -->
+        <nav class="workspace-topbar">
+          <span class="workspace-topbar-brand">JAV 自动化工具</span>
+          <div class="workspace-topbar-tabs">
+            <button id="nav-crawler" class="workspace-nav-button is-active" type="button">JAV 爬虫</button>
+            <button id="nav-organizer" class="workspace-nav-button" type="button">视频整理</button>
+            <button id="nav-subscription" class="workspace-nav-button" type="button">AV 订阅</button>
+          </div>
+        </nav>
+
+        <!--
+          workspace-content 承载三个功能面板
+          通过 CSS display:none/block 切换显隐
+          每个面板以 <section class="workspace-pane"> 包裹
+        -->
+        <div class="workspace-content">
+
+<!--
+  partials/crawler-hero.html - JAV爬虫板块头部区域
+  包含: 粒子背景画布 + hero标题区(版本号/标题/操作按钮/版本历史)
+  由 template 中的 [CRAWLER_HERO] 占位
+-->
+
+<section id="crawler-workspace" class="workspace-pane">
+
+<!-- 粒子动画背景(动态星空效果) -->
+<div class="particle-canvas" id="particleCanvas"></div>
+
+      <header class="hero" id="crawler-hero" data-hero-border-theme="crawler">
+        <!-- 单条圆角闭环流光边框，避免四段独立线条在转角处断开 -->
+        <div class="hero-border-glow hero-border-glow-svg" aria-hidden="true">
+          <svg class="hero-border-svg" viewBox="0 0 1200 320" preserveAspectRatio="none" focusable="false">
+            <rect class="hero-border-base" x="1.5" y="1.5" width="1197" height="317" rx="30"></rect>
+            <rect class="hero-border-trace hero-border-trace-core" x="1.5" y="1.5" width="1197" height="317" rx="30" pathLength="100"></rect>
+          </svg>
+        </div>
+        <div class="hero-glow-orb hero-glow-orb-1"></div>
+        <div class="hero-glow-orb hero-glow-orb-2"></div>
+
+        <section class="hero-copy">
+          <div class="hero-topline">
+            <div class="hero-quick-actions">
+              <button id="choose-background" class="ghost-button toolbar-button" type="button" data-ui-text="actions.changeBackground"></button>
+              <button id="reset-background" class="ghost-button toolbar-button" type="button" data-ui-text="actions.resetBackground"></button>
+            </div>
+            <p class="eyebrow" data-ui-text="hero.eyebrow"></p>
+            <span id="version-badge" class="version-badge">v0.30</span>
+          </div>
+
+          <h1 data-ui-text="hero.title"></h1>
+          <p class="hero-subtitle">基于开源项目：<a href="https://github.com/raawaa/jav-scrapy" target="_blank" rel="noreferrer">raawaa</a></p>
+          <p class="hero-connection-tip" data-ui-text="hero.connectionTip"></p>
+        </section>
+
+        <aside class="hero-side">
+          <div class="hero-note">
+            <div class="hero-note-head">
+              <span class="hero-note-title" data-ui-text="hero.versionTitle"></span>
+            </div>
+            <div class="hero-note-scroll">
+              <ul id="version-history-list" class="hero-note-list"></ul>
+            </div>
+          </div>
+
+          <div class="hero-actions">
+            <button id="update-antiblock" class="ghost-button" type="button" data-ui-text="actions.updateAntiBlock"></button>
+            <button id="open-output" class="ghost-button" type="button" data-ui-text="actions.openOutput"></button>
+            <button id="open-magnet-file" class="ghost-button" type="button" data-ui-text="actions.openMagnetFile"></button>
+          </div>
+        </aside>
+      </header>
+
+
+<!--
+  partials/crawler-body.html - JAV爬虫板块主体区域
+  布局: 2列CSS Grid (.layout)
+    Col1 ─ layout-main-column (抓取设置面板)
+    Col2 ─ ranking-card (女优排行榜，grid-row:1 与左侧齐平)
+    全宽 ─ layout-main-body (抓取阶段面板 + 结果入口面板 + 状态说明)
+    全宽 ─ log-panel (抓取日志)
+  由 [CRAWLER_BODY] 占位符替换
+-->
+
+      <main class="layout" id="crawler-layout">
+        <!-- 左列: 抓取设置面板 -->
+        <div class="layout-main-column">
+        <section class="panel form-panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker" data-ui-text="panels.setupKicker"></p>
+              <h2 data-ui-text="panels.setupTitle"></h2>
+            </div>
+            <div id="status-pill" class="status-pill idle">待命</div>
+          </div>
+
+          <div class="grid">
+            <label class="field">
+              <span data-ui-text="fields.taskTemplate"></span>
+              <select id="taskTemplate"></select>
+              <small data-ui-text="fields.taskTemplateHelp"></small>
+            </label>
+
+            <label class="field">
+              <span data-ui-text="fields.limit"></span>
+              <input id="limit" type="number" min="0" step="1" />
+              <small data-ui-text="fields.limitHelp"></small>
+            </label>
+
+            <label class="field span-2">
+              <span data-ui-text="fields.base"></span>
+              <input id="base" type="text" data-ui-placeholder="placeholders.base" />
+              <div id="base-url-hints" class="base-url-hints"></div>
+            </label>
+
+            <label class="field span-2">
+              <span data-ui-text="fields.output"></span>
+              <div class="path-row">
+                <input id="output" type="text" data-ui-placeholder="placeholders.output" />
+                <button id="browse-output" class="inline-button" type="button" data-ui-text="actions.browseOutput"></button>
+              </div>
+            </label>
+
+            <label class="field">
+              <span data-ui-text="fields.totalPages"></span>
+              <input id="totalPages" type="number" min="0" step="1" />
+              <small data-ui-text="fields.totalPagesHelp"></small>
+            </label>
+
+            <label class="field">
+              <span data-ui-text="fields.itemsPerPage"></span>
+              <input id="itemsPerPage" type="number" min="1" step="1" />
+              <small data-ui-text="fields.itemsPerPageHelp"></small>
+            </label>
+
+            <label class="field">
+              <span data-ui-text="fields.parallel"></span>
+              <input id="parallel" type="number" min="1" step="1" />
+              <small data-ui-text="fields.parallelHelp"></small>
+            </label>
+
+            <label class="field">
+              <span data-ui-text="fields.delay"></span>
+              <input id="delay" type="number" min="0" step="1" />
+              <small data-ui-text="fields.delayHelp"></small>
+            </label>
+
+            <label class="field">
+              <span data-ui-text="fields.timeout"></span>
+              <input id="timeout" type="number" min="1000" step="1000" />
+              <small data-ui-text="fields.timeoutHelp"></small>
+            </label>
+
+            <label class="field span-2">
+              <div class="field-header">
+                <span data-ui-text="fields.proxy"></span>
+                <span id="proxy-status" class="proxy-status-chip empty" data-ui-text="proxyStatus.empty"></span>
+              </div>
+              <input id="proxy" type="text" data-ui-placeholder="placeholders.proxy" />
+              <small id="proxy-status-detail" data-ui-text="fields.proxyHelp"></small>
+            </label>
+
+            <label class="field span-2">
+              <span data-ui-text="fields.magnetExcludeKeywords"></span>
+              <input
+                id="magnetExcludeKeywords"
+                type="text"
+                data-ui-placeholder="placeholders.magnetExcludeKeywords"
+              />
+              <small data-ui-text="fields.magnetExcludeKeywordsHelp"></small>
+            </label>
+
+            <label class="field span-2">
+              <span data-ui-text="fields.actressCountFilterThreshold"></span>
+              <input id="actressCountFilterThreshold" type="text" inputmode="numeric" autocomplete="off" />
+              <small data-ui-text="fields.actressCountFilterThresholdHelp"></small>
+            </label>
+          </div>
+
+          <section class="tip-card">
+            <div class="tip-head">
+              <div>
+                <p class="tip-kicker" data-ui-text="advice.kicker"></p>
+                <h3 data-ui-text="advice.title"></h3>
+              </div>
+              <button id="use-suggested-pages" class="ghost-button" type="button" data-ui-text="advice.applyButton"></button>
+            </div>
+
+            <p id="total-pages-advice" class="tip-primary"></p>
+            <p id="total-pages-meta" class="tip-secondary"></p>
+          </section>
+
+          <div class="toggles">
+            <label class="toggle-card">
+              <input id="cloudflare" type="checkbox" />
+              <span data-ui-text="toggles.cloudflareTitle"></span>
+              <small data-ui-text="toggles.cloudflareHelp"></small>
+            </label>
+
+            <label class="toggle-card">
+              <input id="secondValidation" type="checkbox" />
+              <span data-ui-text="toggles.secondValidationTitle"></span>
+              <small data-ui-text="toggles.secondValidationHelp"></small>
+            </label>
+
+            <label class="toggle-card">
+              <input id="nomag" type="checkbox" />
+              <span data-ui-text="toggles.nomagTitle"></span>
+              <small data-ui-text="toggles.nomagHelp"></small>
+            </label>
+
+            <label class="toggle-card">
+              <input id="allmag" type="checkbox" />
+              <span data-ui-text="toggles.allmagTitle"></span>
+              <small data-ui-text="toggles.allmagHelp"></small>
+            </label>
+
+            <label class="toggle-card">
+              <input id="magnetContentValidation" type="checkbox" />
+              <span data-ui-text="toggles.magnetContentValidationTitle"></span>
+              <small data-ui-text="toggles.magnetContentValidationHelp"></small>
+            </label>
+
+            <label class="toggle-card">
+              <input id="nopic" type="checkbox" />
+              <span data-ui-text="toggles.nopicTitle"></span>
+              <small data-ui-text="toggles.nopicHelp"></small>
+            </label>
+          </div>
+
+          <div class="actions">
+            <button id="start" class="primary-button" type="button" data-ui-text="actions.start"></button>
+            <button id="stop" class="danger-button" type="button" data-ui-text="actions.stop" disabled></button>
+            <button id="restart" class="secondary-button" type="button" data-ui-text="actions.restart"></button>
+            <button id="clear-log" class="ghost-button" type="button" data-ui-text="actions.clearLog"></button>
+          </div>
+        </section>
+
+        </div>
+
+        <!-- 全宽主干区：抓取阶段、结果入口、状态说明 -->
+        <div class="layout-main-body">
+
+        <section class="crawl-ops-grid">
+            <article class="ops-card">
+              <div class="ops-card-head">
+                <div>
+                  <p class="message-label">抓取阶段面板</p>
+                  <strong id="crawl-stage-title">等待开始抓取</strong>
+                </div>
+                <div class="ops-chip-row">
+                  <span id="crawl-stage-status" class="mini-status idle">待机</span>
+                  <span id="crawl-stage-progress" class="ops-chip">阶段 1/10</span>
+                </div>
+              </div>
+              <div class="stage-progress-bar" id="crawl-stage-bar">
+                <div id="crawl-stage-bar-fill" class="stage-progress-bar-fill"></div>
+              </div>
+              <p id="crawl-stage-description" class="ops-description">加载配置并初始化本次抓取运行环境。</p>
+              <p id="crawl-stage-message" class="ops-summary">等待开始抓取。</p>
+              <div class="ops-metric-grid">
+                <div class="ops-metric">
+                  <span>当前页</span>
+                  <strong id="stat-page">0</strong>
+                </div>
+                <div class="ops-metric">
+                  <span>已入队</span>
+                  <strong id="stat-queued">0</strong>
+                </div>
+                <div class="ops-metric">
+                  <span>已尝试</span>
+                  <strong id="stat-attempted">0</strong>
+                </div>
+                <div class="ops-metric">
+                  <span>已完成</span>
+                  <strong id="stat-completed">0</strong>
+                </div>
+              </div>
+              <div class="ops-path-block">
+                <span class="ops-path-label">当前输出目录</span>
+                <p id="crawl-stage-output" class="ops-path">尚未生成</p>
+              </div>
+            </article>
+
+            <article class="ops-card">
+              <div class="ops-card-head">
+                <div>
+                  <p class="message-label">结果入口面板</p>
+                  <strong>抓取产物与复盘入口</strong>
+                </div>
+                <span id="crawl-result-quality" class="mini-status idle">尚未生成复盘</span>
+              </div>
+              <p id="crawl-result-summary" class="ops-summary">等待抓取完成后生成复盘摘要。</p>
+              <div class="result-history-header">
+                <p class="result-history-hint">默认展示最近 2 次，剩余历史记录可用滚轮下拉查看。</p>
+                <button id="crawl-clear-history" class="ghost-button ghost-button-danger" type="button" style="font-size:12px;padding:4px 12px;">删除历史记录</button>
+              </div>
+              <div id="crawl-result-history" class="result-history-list"></div>
+              <div class="result-path-list">
+                <div class="result-path-row">
+                  <div class="result-path-copy">
+                    <span>输出目录</span>
+                    <p id="crawl-result-output" class="ops-path">尚未生成</p>
+                  </div>
+                  <button id="crawl-result-open-output" class="inline-button" type="button" disabled>打开</button>
+                </div>
+                <div class="result-path-row">
+                  <div class="result-path-copy">
+                    <span>filmData.json</span>
+                    <p id="crawl-result-film-data" class="ops-path">尚未生成</p>
+                  </div>
+                  <button id="crawl-result-open-film-data" class="inline-button" type="button" disabled>打开</button>
+                </div>
+                <div class="result-path-row">
+                  <div class="result-path-copy">
+                    <span>磁力文档</span>
+                    <p id="crawl-result-magnet" class="ops-path">尚未生成</p>
+                  </div>
+                  <button id="crawl-result-open-magnet" class="inline-button" type="button" disabled>打开</button>
+                </div>
+                <div class="result-path-row">
+                  <div class="result-path-copy">
+                    <span>日志目录</span>
+                    <p id="crawl-result-log-dir" class="ops-path">尚未生成</p>
+                  </div>
+                  <button id="crawl-result-open-log-dir" class="inline-button" type="button" disabled>打开</button>
+                </div>
+                <div class="result-path-row">
+                  <div class="result-path-copy">
+                    <span>latest-log.txt</span>
+                    <p id="crawl-result-latest-log" class="ops-path">尚未生成</p>
+                  </div>
+                  <button id="crawl-result-open-latest-log" class="inline-button" type="button" disabled>打开</button>
+                </div>
+                <div class="result-path-row">
+                  <div class="result-path-copy">
+                    <span>复盘报告</span>
+                    <p id="crawl-result-report" class="ops-path">尚未生成</p>
+                  </div>
+                  <button id="crawl-result-open-report" class="inline-button" type="button" disabled>打开</button>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <!-- 状态说明：待抓取 / 已抓取 / 未抓取（整合至链路总览内） -->
+          <section class="state-section">
+            <div class="state-section-header">
+              <span>状态说明</span>
+            </div>
+            <!-- 实时状态消息：由 stateController.setStatus 写入 -->
+            <p id="state-message" style="margin:0 0 14px;color:#9eb4cb;font-size:13px;line-height:1.6">等待开始抓取。</p>
+            <div class="state-grid">
+              <div id="unfinished-box" class="state-card">
+                <div class="state-card-header">
+                  <span class="state-card-title" data-ui-text="state.unfinishedLabel">待抓取</span>
+                  <span id="unfinished-total" class="state-card-count">0</span>
+                </div>
+                <div id="unfinished-items" class="state-card-body">
+                  <span class="state-chip chip-pending">ABP-123</span>
+                  <span class="state-chip chip-pending">SSIS-456</span>
+                </div>
+              </div>
+              <div id="current-box" class="state-card">
+                <div class="state-card-header">
+                  <span class="state-card-title" data-ui-text="state.currentLabel">已抓取</span>
+                  <span id="current-total" class="state-card-count" style="background:rgba(52,211,153,0.12);color:var(--accent-success);">0</span>
+                </div>
+                <div id="current-items" class="state-card-body">
+                  <span class="state-chip chip-done">IPX-789</span>
+                </div>
+              </div>
+              <div id="failed-box" class="state-card">
+                <div class="state-card-header">
+                  <span class="state-card-title" data-ui-text="state.failedLabel">未抓取说明</span>
+                  <span id="failed-total" class="state-card-count" style="background:rgba(255,110,157,0.12);color:var(--accent-danger);">0</span>
+                </div>
+                <div id="failed-items" class="state-card-body">
+                  <span class="state-chip chip-missing">MIAA-001</span>
+                </div>
+              </div>
+              <div id="filtered-box" class="state-card">
+                <div class="state-card-header">
+                  <span class="state-card-title" data-ui-text="state.filteredLabel">过滤影片番号</span>
+                  <span id="filtered-total" class="state-card-count" style="background:rgba(125,211,252,0.12);color:#bae6fd;">0</span>
+                </div>
+                <div id="filtered-items" class="state-card-body">
+                  <span class="state-chip chip-filtered">暂无过滤影片番号</span>
+                </div>
+              </div>
+            </div>
+            <!-- 隐藏容器：供stateController写入重复/分页缺口数据 -->
+            <div id="duplicate-box" class="task-box hidden">
+              <p class="message-label message-label-row">
+                <span data-ui-text="state.duplicateLabel"></span>
+                <span id="duplicate-total" class="message-count">0</span>
+              </p>
+              <div id="duplicate-items" class="item-grid"></div>
+            </div>
+            <div id="page-gap-box" class="page-gap-box hidden">
+              <p class="message-label" data-ui-text="state.pageGapLabel"></p>
+              <div id="page-gap-items" class="item-grid"></div>
+            </div>
+          </section>
+
+        </div>
+        <!-- /全宽主干区 -->
+
+        <section class="ranking-card">
+          <div class="ranking-head">
+            <div>
+              <p class="message-label" data-ui-text="ranking.label"></p>
+              <h3 data-ui-text="ranking.title"></h3>
+            </div>
+            <button id="refresh-ranking" class="ghost-button" type="button" data-ui-text="ranking.refreshButton"></button>
+          </div>
+
+          <div class="ranking-controls">
+            <label class="field compact-field">
+              <span data-ui-text="ranking.channelLabel"></span>
+              <select id="ranking-source-channel"></select>
+            </label>
+
+            <label class="field compact-field">
+              <span data-ui-text="ranking.modeLabel"></span>
+              <select id="ranking-mode"></select>
+            </label>
+
+            <label id="ranking-year-field" class="field compact-field hidden">
+              <span data-ui-text="ranking.yearLabel"></span>
+              <select id="ranking-year"></select>
+            </label>
+
+            <label id="ranking-month-field" class="field compact-field hidden">
+              <span data-ui-text="ranking.monthLabel"></span>
+              <select id="ranking-month"></select>
+            </label>
+          </div>
+
+          <p id="ranking-help" class="ranking-help" data-ui-text="ranking.monthHelp"></p>
+          <p id="ranking-channel-tip" class="ranking-note" data-ui-text="ranking.officialProxyTip"></p>
+          <div id="ranking-meta" class="ranking-meta"></div>
+          <div id="ranking-source" class="ranking-source hidden">
+            <span id="ranking-source-text"></span>
+            <button id="open-ranking-source" class="inline-button" type="button" data-ui-text="ranking.openSource"></button>
+          </div>
+          <section class="ranking-cache-panel">
+            <div class="ranking-cache-head">
+              <div>
+                <p class="message-label">内部缓存管理</p>
+                <strong>最近爬取快照</strong>
+              </div>
+              <button id="crawl-cache-refresh" class="ghost-button" type="button">刷新</button>
+            </div>
+            <label class="field compact-field">
+              <span>缓存选择</span>
+              <select id="crawl-cache-select">
+                <option value="">请选择缓存快照</option>
+              </select>
+            </label>
+            <p id="crawl-cache-summary" class="ranking-meta">当前没有内部缓存快照。</p>
+            <div class="actions" style="margin-top:0;">
+              <button id="crawl-cache-remove" class="ghost-button" type="button">清除所选缓存</button>
+              <button id="crawl-cache-clear" class="danger-button" type="button">清空全部缓存</button>
+            </div>
+          </section>
+          <div id="ranking-view" class="ranking-view"></div>
+        </section>
+
+        <section class="panel log-panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker" data-ui-text="panels.logKicker"></p>
+              <h2 data-ui-text="panels.logTitle"></h2>
+            </div>
+            <button id="open-log-folder" class="ghost-button" type="button" data-ui-text="actions.openLogFolder"></button>
+          </div>
+          <p id="log-file-path" class="log-file-path"></p>
+          <div id="log-view" class="log-view"></div>
+        </section>
+      </main>
+</section>
+
+
+<!--
+  partials/organizer-hero.html - 视频整理板块头部区域
+  包含: hero标题区(模块名/标题/说明/版本更新列表)
+  由 [ORGANIZER_HERO] 占位
+  workspace-pane默认hidden，通过导航按钮切换显示
+-->
+
+<section id="organizer-workspace" class="workspace-pane hidden">
+            <header class="hero organizer-hero" id="organizer-hero" data-hero-border-theme="organizer">
+              <div class="hero-border-glow hero-border-glow-svg" aria-hidden="true">
+                <svg class="hero-border-svg" viewBox="0 0 1200 320" preserveAspectRatio="none" focusable="false">
+                  <rect class="hero-border-base" x="1.5" y="1.5" width="1197" height="317" rx="30"></rect>
+                  <rect class="hero-border-trace hero-border-trace-core" x="1.5" y="1.5" width="1197" height="317" rx="30" pathLength="100"></rect>
+                </svg>
+              </div>
+              <div class="hero-glow-orb hero-glow-orb-1"></div>
+              <div class="hero-glow-orb hero-glow-orb-2"></div>
+
+              <section class="hero-copy">
+                <div class="hero-topline">
+                  <p class="eyebrow">视频整理模块</p>
+                  <span id="organizer-version-badge" class="version-badge">v0.30</span>
+                </div>
+                <h1>下载文件快速归类</h1>
+                <p class="hero-subtitle">全自动改名、整理、删除、排查开头广告视频。</p>
+                <p class="hero-connection-tip">
+                  建议通过CloudDrive2将网盘挂载至本地进行整理更加方便。或将所有jav爬虫视频下载本地磁盘进行整理
+                </p>
+              </section>
+              <aside class="hero-side">
+                <div class="hero-note">
+                  <div class="hero-note-head">
+                    <span class="hero-note-title">版本更新</span>
+                  </div>
+                  <div class="hero-note-scroll">
+                    <ul id="organizer-version-history-list" class="hero-note-list"></ul>
+                  </div>
+                </div>
+              </aside>
+            </header>
+
+
+<!--
+  partials/organizer-body.html - 视频整理板块主体区域
+  布局: 单列流式(.layout，无ranking-card)
+    ├── form-panel (整理配置表单 + AI广告学习 + 依赖管理)
+    ├── stats-panel (整理统计 + 报告 + 复盘)
+    └── log-panel (整理日志)
+  与JAV爬虫不同: 无右侧排行栏，无抓取阶段/结果入口面板
+  由 [ORGANIZER_BODY] 占位
+-->
+
+            <main class="layout">
+              <section class="panel form-panel">
+                <div class="panel-head">
+                  <div>
+                    <p class="panel-kicker">整理配置</p>
+                    <h2>目录与规则</h2>
+                  </div>
+                  <div id="organizer-status-pill" class="status-pill idle">等待开始整理。</div>
+                </div>
+
+                <div class="grid">
+                  <label class="field span-2">
+                    <span>目标根目录</span>
+                    <div class="path-row">
+                      <input id="organizer-root" type="text" placeholder="请选择需要整理的根目录" />
+                      <button id="organizer-browse-root" class="inline-button" type="button">选择</button>
+                    </div>
+                    <small>建议客户将所有下载文件统一放在该目录下。</small>
+                  </label>
+
+                  <label class="field span-2">
+                    <span>整理快照或爬虫结果输入</span>
+                    <div class="path-row">
+                      <input id="organizer-crawl-output" type="text" placeholder="默认使用最近整理快照、filmData.json 或爬虫结果目录" />
+                      <button id="organizer-use-latest-output" class="inline-button" type="button">最近整理输入</button>
+                    </div>
+                    <div class="organizer-inline-actions">
+                      <button id="organizer-load-codes" class="ghost-button" type="button">加载番号名单</button>
+                    </div>
+                    <small id="organizer-code-source">来源：尚未加载番号名单</small>
+                    <small>支持 organizer-codes.json、filmData.json 或原始爬虫结果目录。</small>
+                    <small>当前已加载番号数量：<strong id="organizer-code-count">0</strong></small>
+                  </label>
+
+                  <label class="field">
+                    <span>最小体积 (MB)</span>
+                    <input id="organizer-min-size" type="number" min="1" step="1" />
+                    <small>低于该体积的视频会归为广告文件，按"广告处理方式"执行。</small>
+                  </label>
+
+                  <label class="field">
+                    <span>冲突后缀</span>
+                    <input id="organizer-suffix" type="text" placeholder="-A" />
+                    <small>同下方"视频文件后缀判定"配合使用。</small>
+                    <small>同番号多文件时依次附加后缀，例如 -A / -B。</small>
+                  </label>
+
+                  <label class="field span-2">
+                    <span>视频文件后缀判定</span>
+                    <input
+                      id="organizer-video-extensions"
+                      type="text"
+                      placeholder="mp4, mkv, avi, mov, flv, wmv, ts, m4v, iso"
+                    />
+                    <small>符合这些后缀且大于最小体积的文件会进入待整理；可追加 iso、bdmv 等蓝光圆盘文件类型。</small>
+                  </label>
+
+                  <label class="field span-2">
+                    <span>广告处理方式（显式选择）</span>
+                    <div class="toggles organizer-ad-action-grid">
+                      <label class="toggle-card organizer-ad-action-card">
+                        <input
+                          id="organizer-ad-file-action-move"
+                          name="organizer-ad-file-action"
+                          type="radio"
+                          value="move-to-delete"
+                          checked
+                        />
+                        <span>移入待删除（推荐）</span>
+                        <small>广告文件先放入待删除目录，便于人工复核。</small>
+                      </label>
+                      <label class="toggle-card organizer-ad-action-card">
+                        <input
+                          id="organizer-ad-file-action-delete"
+                          name="organizer-ad-file-action"
+                          type="radio"
+                          value="delete-directly"
+                        />
+                        <span>直接删除广告文件</span>
+                        <small>广告文件不再进入待删除，直接清理，速度更快。</small>
+                      </label>
+                    </div>
+                    <small>你可以在每次整理前切换该模式。</small>
+                  </label>
+                </div>
+
+                <div class="toggles">
+                  <label class="toggle-card">
+                    <input id="organizer-include-subdirectories" type="checkbox" checked />
+                    <span>扫描子目录</span>
+                    <small>开启后会递归扫描根目录下所有子目录。</small>
+                  </label>
+
+                  <label class="toggle-card">
+                    <input id="organizer-dry-run" type="checkbox" />
+                    <span>开始按钮使用预览模式</span>
+                    <small>开启后点击"执行整理"也只做扫描，不移动文件。</small>
+                  </label>
+
+                  <label class="toggle-card">
+                    <input id="organizer-strict-code-match" type="checkbox" checked />
+                    <span>严格匹配爬虫番号名单</span>
+                    <small>未命中名单的非广告候选将移入待删除，避免误命名。</small>
+                  </label>
+                </div>
+
+                <section class="task-box organizer-learning-box">
+                  <p class="message-label">广告样本学习</p>
+                  <p class="organizer-learning-tip">
+                    可导入"广告开头样本"和"正常开头样本"，也可直接输入番号自动抓帧学习。所有学习仅在本地执行。
+                  </p>
+
+                  <div class="grid organizer-learning-grid">
+                    <label class="field">
+                      <span>广告风险阈值 (1-100)</span>
+                      <input id="organizer-ad-threshold" type="number" min="1" max="100" step="1" value="60" />
+                      <small>评分高于阈值的视频会进入"含开头广告"，并输出复核与补抓清单。</small>
+                    </label>
+
+                    <label class="field span-2">
+                      <span>广告关键词（逗号分隔）</span>
+                      <input id="organizer-ad-keywords" type="text" placeholder="示例：片头广告, 站点水印, 宣传（逗号分隔）" />
+                      <small>文件名命中关键词会提高广告风险评分。</small>
+                    </label>
+                  </div>
+
+                  <label class="field">
+                    <span>按番号自动学习（可多条，逗号/换行分隔）</span>
+                    <textarea
+                      id="organizer-learning-codes"
+                      rows="3"
+                      placeholder="例如：ABP-001, IPX-777, SSIS-321"
+                    ></textarea>
+                    <small>用于告诉软件"这些番号是广告样本"或"这些番号是正常样本"。</small>
+                  </label>
+
+                  <input id="organizer-ad-detection-enabled" type="checkbox" checked hidden />
+                  <div class="toggles organizer-ad-detection-grid">
+                    <label class="toggle-card organizer-ad-action-card">
+                      <input
+                        id="organizer-ad-detection-enable"
+                        name="organizer-ad-detection-mode"
+                        type="radio"
+                        value="enabled"
+                        checked
+                      />
+                      <span>启用 AI 广告检测（推荐）</span>
+                      <small>结合关键词、样本相似度与片头模板，识别"含开头广告"视频并单独归档。</small>
+                    </label>
+                    <label class="toggle-card organizer-ad-action-card">
+                      <input
+                        id="organizer-ad-detection-disable"
+                        name="organizer-ad-detection-mode"
+                        type="radio"
+                        value="disabled"
+                      />
+                      <span>关闭 AI 广告检测</span>
+                      <small>仅按文件大小判定广告文件，速度更快但识别精度较低。</small>
+                    </label>
+                  </div>
+
+                  <label class="field">
+                    <span>广告识别策略</span>
+                    <select id="organizer-ad-model-type">
+                      <option value="mobile-net-v3-lite">MobileNetV3 Lite（轻量策略，推荐）</option>
+                      <option value="squeezenet-fast">SqueezeNet Fast（轻量策略，更快）</option>
+                      <option value="yolov8n-balanced">YOLOv8n Balanced（轻量策略，更严格）</option>
+                    </select>
+                    <small>可按设备性能切换模型策略；仅影响广告风险评分，不影响爬虫流程。</small>
+                  </label>
+
+                  <div class="organizer-inline-actions organizer-learning-actions">
+                    <div class="help-action-group">
+                      <button id="organizer-import-ad-samples" class="ghost-button" type="button">导入广告样本</button>
+                      <button id="organizer-help-import-ad" class="icon-help-button" type="button" title="导入广告样本说明">?</button>
+                    </div>
+                    <div class="help-action-group">
+                      <button id="organizer-import-normal-samples" class="ghost-button" type="button">导入正常样本</button>
+                      <button id="organizer-help-import-normal" class="icon-help-button" type="button" title="导入正常样本说明">?</button>
+                    </div>
+                    <div class="help-action-group">
+                      <button id="organizer-learn-ad-by-codes" class="ghost-button" type="button">按番号学习广告样本</button>
+                      <button id="organizer-help-learn-ad" class="icon-help-button" type="button" title="按番号学习广告说明">?</button>
+                    </div>
+                    <div class="help-action-group">
+                      <button id="organizer-learn-normal-by-codes" class="ghost-button" type="button">按番号学习正常样本</button>
+                      <button id="organizer-help-learn-normal" class="icon-help-button" type="button" title="按番号学习正常说明">?</button>
+                    </div>
+                    <button id="organizer-refresh-learning-summary" class="ghost-button" type="button">刷新学习摘要</button>
+                  </div>
+                  <small class="organizer-learning-guide">
+                    说明：导入广告样本=选择"有广告开头"的图片或视频；导入正常样本=选择"无广告开头"的正常视频。按番号学习会在目录中匹配番号并自动抓取开头帧。
+                  </small>
+                  <small id="organizer-learning-summary" class="organizer-learning-summary">尚未加载学习模型。</small>
+                </section>
+
+                <div class="organizer-dependency-box">
+                  <div class="organizer-dependency-head">
+                    <p class="message-label">AI 依赖环境</p>
+                    <button id="organizer-refresh-dependency" class="ghost-button" type="button">刷新依赖状态</button>
+                  </div>
+                  <p id="organizer-dependency-summary" class="organizer-dependency-summary">
+                    正在检测 FFmpeg / ONNX Runtime ...
+                  </p>
+                  <p id="organizer-dependency-detail" class="organizer-dependency-detail">
+                    启用 AI 广告检测前会先检查 FFmpeg；ONNX Runtime 作为后续增强模型运行时，可提前安装。
+                  </p>
+                  <div class="organizer-dependency-url-fields">
+                    <label class="field organizer-dependency-url-field">
+                      <span>自定义 FFmpeg 下载地址（可选）</span>
+                      <input id="organizer-ffmpeg-download-url" type="text" placeholder="输入 FFmpeg ZIP 包下载链接（留空使用默认地址）" />
+                      <small>国内用户可将 FFmpeg 上传至网盘后提供直链，实现一键安装。</small>
+                    </label>
+                    <label class="field organizer-dependency-url-field">
+                      <span>自定义 ONNX Runtime 下载地址（可选）</span>
+                      <input id="organizer-onnx-download-url" type="text" placeholder="输入 ONNX Runtime ZIP 包下载链接（留空使用默认地址）" />
+                      <small>国内用户可将 ONNX Runtime 上传至网盘后提供直链，实现一键安装。</small>
+                    </label>
+                    <label class="field organizer-dependency-url-field organizer-alist-field">
+                      <span>alist 服务地址（流式检测用，可选）</span>
+                      <input id="organizer-alist-url" type="text" placeholder="http://localhost:5244" />
+                      <small>填写 alist 地址后，广告检测将使用 HTTP Range 流式下载视频头部（仅50MB），大幅提升网盘视频检测速度。</small>
+                    </label>
+                  </div>
+                  <div class="organizer-inline-actions organizer-dependency-actions">
+                    <button id="organizer-install-ffmpeg" class="ghost-button" type="button">一键安装 FFmpeg</button>
+                    <button id="organizer-install-onnx" class="ghost-button" type="button">一键安装 ONNX Runtime</button>
+                    <button id="organizer-delete-dependency" class="ghost-button ghost-button-danger" type="button">删除依赖</button>
+                  </div>
+                </div>
+
+                <div class="actions">
+                  <button id="organizer-start" class="primary-button" type="button">执行整理</button>
+                  <button id="organizer-preview" class="secondary-button" type="button">预览扫描</button>
+                  <button id="organizer-open-root" class="ghost-button" type="button">打开根目录</button>
+                  <button id="organizer-clear-log" class="ghost-button" type="button">清空整理日志</button>
+                </div>
+              </section>
+
+              <section class="panel stats-panel">
+                <div class="panel-head">
+                  <div>
+                    <p class="panel-kicker">整理统计</p>
+                    <h2>运行结果</h2>
+                  </div>
+                </div>
+
+                <div class="stat-grid organizer-stat-grid">
+                  <article class="stat-card">
+                    <span>扫描文件</span>
+                    <strong id="organizer-stat-scanned">0</strong>
+                  </article>
+                  <article class="stat-card">
+                    <span>视频文件</span>
+                    <strong id="organizer-stat-video">0</strong>
+                  </article>
+                  <article class="stat-card">
+                    <span>命中番号</span>
+                    <strong id="organizer-stat-matched">0</strong>
+                  </article>
+                  <article class="stat-card">
+                    <span>移入待整理</span>
+                    <strong id="organizer-stat-waiting">0</strong>
+                  </article>
+                  <article class="stat-card">
+                    <span>移入待删除</span>
+                    <strong id="organizer-stat-delete">0</strong>
+                  </article>
+                  <article class="stat-card">
+                    <span>失败数</span>
+                    <strong id="organizer-stat-failed">0</strong>
+                  </article>
+                </div>
+
+                <div class="message-box">
+                  <p class="message-label">最近状态</p>
+                  <p id="organizer-summary-message">等待开始整理。</p>
+
+                  <div class="task-box">
+                    <p class="message-label">常用目录</p>
+                    <div class="organizer-quick-actions">
+                      <button id="organizer-open-waiting" class="ghost-button" type="button">打开待整理</button>
+                      <button id="organizer-open-delete" class="ghost-button" type="button">打开待删除</button>
+                      <button id="organizer-open-intro-ad" class="ghost-button" type="button">打开含开头广告</button>
+                      <button id="organizer-open-reports" class="ghost-button" type="button">打开报告目录</button>
+                    </div>
+                  </div>
+
+                  <div class="task-box">
+                    <p class="message-label">报告文件</p>
+                    <div id="organizer-report-paths" class="organizer-report-list"></div>
+                  </div>
+
+                  <div class="task-box">
+                    <p class="message-label">整理复盘</p>
+                    <div id="organizer-review-panel" class="organizer-review-panel">
+                      <p class="organizer-review-empty">运行完成后会在这里显示：遗漏番号、补抓磁力、误判复核入口。</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="panel log-panel">
+                <div class="panel-head">
+                  <div>
+                    <p class="panel-kicker">整理日志</p>
+                    <h2>执行明细</h2>
+                  </div>
+                </div>
+                <div id="organizer-log-view" class="log-view"></div>
+              </section>
+            </main>
+          </section>
+
+
+<!--
+  partials/subscription-hero.html - AV订阅板块头部区域
+  本版按 AV 订阅 V2 重新组织：
+  - 仅保留订阅说明与三段式业务引导
+  - 不在这里承载旧的更新回填逻辑
+-->
+
+<section id="subscription-workspace" class="workspace-pane hidden">
+  <header class="hero subscription-hero" id="subscription-hero" data-hero-border-theme="subscription">
+    <div class="hero-border-glow hero-border-glow-svg" aria-hidden="true">
+      <svg class="hero-border-svg" viewBox="0 0 1200 320" preserveAspectRatio="none" focusable="false">
+        <rect class="hero-border-base" x="1.5" y="1.5" width="1197" height="317" rx="30"></rect>
+        <rect class="hero-border-trace hero-border-trace-core" x="1.5" y="1.5" width="1197" height="317" rx="30" pathLength="100"></rect>
+      </svg>
+    </div>
+    <div class="hero-glow-orb hero-glow-orb-1"></div>
+    <div class="hero-glow-orb hero-glow-orb-2"></div>
+
+    <section class="hero-copy">
+      <div class="hero-topline">
+        <p class="eyebrow">AV 订阅模块</p>
+        <span id="subscription-version-badge" class="version-badge">v0.30</span>
+      </div>
+      <h1>女优订阅与更新追踪</h1>
+      <p class="hero-subtitle">把已抓女优沉淀为长期订阅，后续只检查新增影片并一键回填到 JAV 爬虫。</p>
+      <p class="hero-connection-tip">支持扫描本地 filmData.json 自动建基线，也支持手动输入演员名称、演员爬取地址、演员番号数新增订阅。</p>
+    </section>
+
+    <aside class="hero-side">
+      <div class="hero-note">
+        <div class="hero-note-head">
+          <span class="hero-note-title">订阅引导</span>
+        </div>
+        <div class="hero-note-scroll">
+          <ul class="hero-note-list">
+            <li><strong>1.</strong> 使用“最近抓取输出”回填目录，再扫描本地已抓结果。</li>
+            <li><strong>2.</strong> 点击“订阅更新”后，软件会对比上次同步数与当前总数。</li>
+            <li><strong>3.</strong> 发现更新后，直接点“更新订阅”即可只抓新增影片。</li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+  </header>
+
+
+<!--
+  partials/subscription-body.html - AV订阅板块主体区域
+  当前结构按维护优先级重组：
+  - 顶部：标题区
+  - 左列：订阅列表 / AV爬取 / 日志
+  - 右列：订阅来源与基线建立 / 当前选中项与预载项
+-->
+
+<main class="layout subscription-layout">
+  <section class="panel subscription-title-panel">
+    <div class="panel-head">
+      <div>
+          <p class="panel-kicker">AV 订阅</p>
+          <h2>女优订阅与更新追踪</h2>
+          <p class="subscription-sort-tip">先建立基线，再检测更新，最后只抓新增番号。</p>
+        </div>
+      </div>
+    <div class="message-box subscription-message-box subscription-title-box">
+      <p id="subscription-summary-message">等待检测订阅更新。</p>
+    </div>
+  </section>
+
+  <section class="subscription-main-stack">
+    <section class="panel subscription-master-panel">
+      <div class="panel-head">
+        <div>
+          <p class="panel-kicker">我的订阅</p>
+          <h2>AV 女优订阅列表</h2>
+          <p class="subscription-sort-tip">列表按待更新数降序排列；同值时按订阅更新时间从新到旧排序。</p>
+        </div>
+        <div class="subscription-master-head-side">
+          <div class="subscription-mini-stats">
+            <article class="subscription-mini-stat">
+              <span>总数</span>
+              <strong id="subscription-stat-total">0</strong>
+            </article>
+            <article class="subscription-mini-stat">
+              <span>待更新</span>
+              <strong id="subscription-stat-updated">0</strong>
+            </article>
+            <article class="subscription-mini-stat">
+              <span>已检查</span>
+              <strong id="subscription-stat-checked">0</strong>
+            </article>
+          </div>
+          <div class="subscription-top-actions">
+            <button id="subscription-detect-all" class="secondary-button subscription-top-refresh-button" type="button">检测全部订阅</button>
+            <button id="subscription-refresh" class="secondary-button subscription-top-refresh-button" type="button">检测更新</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="subscription-list" class="subscription-list subscription-master-list"></div>
+    </section>
+
+    <section class="panel subscription-crawler-panel">
+      <div class="panel-head">
+        <div>
+          <p class="panel-kicker">AV 爬取</p>
+          <h2>AV 爬取</h2>
+          <p class="subscription-sort-tip">更新抓取会桥接订阅基线，只抓新增番号，默认输出到软件目录内的 AV订阅 文件夹。</p>
+        </div>
+        <div class="subscription-crawler-status">
+          <span>状态</span>
+          <strong id="subscription-crawler-status">待启动</strong>
+        </div>
+      </div>
+      <div class="grid subscription-crawler-grid">
+        <label class="field span-2">
+          <span>爬取地址</span>
+          <input id="subscription-crawler-url" type="text" placeholder="例如：https://www.javbus.com/star/okq" />
+        </label>
+
+        <label class="field">
+          <span>爬取数量</span>
+          <input id="subscription-crawler-count" type="number" min="1" step="1" />
+        </label>
+
+        <label class="field">
+          <span>女优名称</span>
+          <input id="subscription-crawler-actress-name" type="text" placeholder="例如：三上悠亚" />
+        </label>
+
+        <label class="field">
+          <span>并行量</span>
+          <input id="subscription-crawler-parallel" type="number" min="1" step="1" value="2" />
+        </label>
+
+        <label class="field">
+          <span>请求延迟（秒）</span>
+          <input id="subscription-crawler-delay" type="number" min="0" step="1" value="2" />
+        </label>
+
+        <label class="field">
+          <span>超时时间（毫秒）</span>
+          <input id="subscription-crawler-timeout" type="number" min="1000" step="1000" value="30000" />
+        </label>
+
+        <label class="field span-2">
+          <span>代理地址</span>
+          <input id="subscription-crawler-proxy" type="text" placeholder="例如：http://127.0.0.1:7897" />
+          <div class="field-inline-status">
+            <span id="subscription-proxy-status" class="proxy-status-chip empty">未检测</span>
+          </div>
+          <small id="subscription-proxy-status-detail">订阅抓取默认使用 127.0.0.1:7897，可手动修改。</small>
+        </label>
+
+        <label class="toggle-line subscription-runtime-toggle">
+          <input id="subscription-crawler-cloudflare" type="checkbox" checked />
+          <span>
+            <strong>Cloudflare 兼容</strong>
+            <small>复用 JAV 爬虫的 Cloudflare / 年龄检测兼容链路。</small>
+          </span>
+        </label>
+      </div>
+      <p class="subscription-runtime-note">输出目录已改为系统默认路径，无需手动选择。</p>
+
+      <div class="actions subscription-crawler-toolbar">
+        <button id="subscription-update-antiblock" class="secondary-button" type="button">更新反屏蔽</button>
+        <button id="subscription-start-crawl" class="primary-button" type="button">开始更新</button>
+        <button id="subscription-batch-crawl" class="primary-button" type="button">批量抓取</button>
+        <button id="subscription-stop-crawl" class="secondary-button" type="button">停止</button>
+        <button id="subscription-open-output" class="ghost-button" type="button">打开路径</button>
+      </div>
+    </section>
+
+    <section class="panel subscription-log-panel">
+      <div class="panel-head">
+        <div>
+          <p class="panel-kicker">订阅日志</p>
+          <h2>执行记录</h2>
+        </div>
+      </div>
+      <div id="subscription-log-view" class="log-view"></div>
+    </section>
+  </section>
+
+  <aside class="subscription-side-stack">
+    <section class="panel subscription-actions-panel">
+      <div class="panel-head">
+        <div>
+          <p class="panel-kicker">订阅来源</p>
+          <h2>新增订阅</h2>
+          <p class="subscription-sort-tip">可从最近爬取结果、JSON 快照或手动填写演员信息建立订阅。</p>
+        </div>
+      </div>
+
+      <div class="grid subscription-form-grid">
+        <label class="field span-2">
+          <span>订阅快照或抓取结果输入</span>
+          <div class="path-row">
+            <input id="subscription-output" type="text" placeholder="请选择 crawl-profile.json、filmData.json 或抓取结果目录" />
+            <button id="subscription-browse-output" class="inline-button" type="button">浏览</button>
+          </div>
+        </label>
+
+        <label class="field span-2">
+          <span>最近爬取选择</span>
+          <select id="subscription-recent-crawl-select">
+            <option value="">请选择最近抓取记录</option>
+          </select>
+          <small>显示最近用户抓取过的女优名称，便于快速回填订阅输入。</small>
+        </label>
+
+        <div class="organizer-inline-actions subscription-inline-actions span-2">
+          <button id="subscription-use-recent-crawl" class="ghost-button" type="button">载入最近爬取</button>
+          <button id="subscription-use-latest-output" class="ghost-button" type="button">回填最近结果</button>
+          <button id="subscription-scan-output" class="ghost-button" type="button">扫描生成订阅</button>
+        </div>
+
+        <label class="field span-2">
+          <span>女优名称</span>
+          <input id="subscription-actress-name" type="text" placeholder="例如：三上悠亚" />
+        </label>
+
+        <label class="field span-2">
+          <span>女优地址</span>
+          <input id="subscription-target-url" type="text" placeholder="例如：https://www.javbus.com/star/okq" />
+        </label>
+
+        <label class="field">
+          <span>女优片数</span>
+          <input id="subscription-synced-count" type="number" min="0" step="1" />
+        </label>
+
+        <label class="field">
+          <span>每页条数</span>
+          <input id="subscription-items-per-page" type="number" min="1" step="1" value="30" />
+        </label>
+
+        <label class="field">
+          <span>总页数</span>
+          <input id="subscription-total-pages" type="number" min="1" step="1" value="1" />
+        </label>
+      </div>
+
+      <div class="actions subscription-actions-toolbar">
+        <button id="subscription-add" class="primary-button" type="button">保存订阅</button>
+        <button id="subscription-create-manual" class="primary-button" type="button">手动新建</button>
+        <button id="subscription-clear-form" class="ghost-button" type="button">清空输入</button>
+        <button id="subscription-clear-all" class="danger-button" type="button">清空订阅</button>
+      </div>
+    </section>
+
+    <section class="panel subscription-detail-panel">
+      <div class="panel-head">
+        <div>
+          <p class="panel-kicker">预载与详情</p>
+          <h2>当前选中项 / 当前预载项</h2>
+        </div>
+      </div>
+      <div id="subscription-detail-empty" class="subscription-empty">当前未选中任何订阅。</div>
+      <div id="subscription-detail-card" class="detail-card hidden"></div>
+    </section>
+
+    <section class="panel subscription-overview-panel">
+      <div class="panel-head">
+        <div>
+          <p class="panel-kicker">订阅统计</p>
+          <h2>更新总览</h2>
+        </div>
+      </div>
+      <div class="stat-grid organizer-stat-grid subscription-overview-grid">
+        <article class="stat-card">
+          <span>订阅总数</span>
+          <strong id="subscription-stat-total-side">0</strong>
+        </article>
+        <article class="stat-card">
+          <span>有更新女优</span>
+          <strong id="subscription-stat-updated-side">0</strong>
+        </article>
+        <article class="stat-card">
+          <span>待抓新增</span>
+          <strong id="subscription-stat-pending">0</strong>
+        </article>
+        <article class="stat-card">
+          <span>已检查订阅</span>
+          <strong id="subscription-stat-checked-side">0</strong>
+        </article>
+      </div>
+    </section>
+  </aside>
+</main>
+</section>
+
+
+        </div>
+      </div>
+    </div>
+
+    <!-- 单个入口：所有JS已合并到 bundle.js (18个源文件) -->
+    <script src="./bundle.js"></script>
+  </body>
+</html>

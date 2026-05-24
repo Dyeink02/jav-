@@ -1,0 +1,29 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "jav-auto-phase1",
+  "outputfilename": "jav-auto-phase1",
+  "frontend:dir": "frontend",
+  "frontend:install": "",
+  "frontend:build": "",
+  "frontend:dev:watcher": "",
+  "assetdir": "frontend",
+  "author": {
+    "name": "Codex"
+  },
+  "info": {
+    "companyName": "raawaa",
+    "productName": "JAV自动集成源",
+    "productVersion": "0.30.0",
+    "copyright": "Based on raawaa/jav-scrapy",
+    "comments": "JAV auto integrated source - Wails + Go desktop app"
+  },
+  "windows": {
+    "icon": "../build/icon.ico",
+    "info": {
+      "companyName": "raawaa",
+      "productName": "JAV自动集成源",
+      "productVersion": "0.30.0",
+      "copyright": "Based on raawaa/jav-scrapy"
+    }
+  }
+}
