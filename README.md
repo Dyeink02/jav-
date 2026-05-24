@@ -1,4 +1,4 @@
-# JAV 自动集成源
+# JAV 爬虫/视频整理/AV订阅
 
 这个仓库是在 [raawaa/jav-scrapy](https://github.com/raawaa/jav-scrapy) 的基础上继续做的。  
 现在的主程序是 `Wails + Go`，前端在 `desktop/renderer`，`Node sidecar` 主要保留给 Cloudflare / 年龄检测这类兼容场景。
@@ -10,7 +10,7 @@
 1. `JAV 爬虫`：抓影片信息和磁力，输出 JSON、TXT、日志
 2. `视频整理`：按番号整理本地视频
 3. `AV 订阅`：基于已有数据做更新检测和更新抓取
-
+该软件完全有AI进下功能改进功能扩张，对于开源项目已作出较多更改与迭代，但任然保留 Cloudflare。
 ## 当前代码结构（简版）
 
 - `wails-shell/`：桌面程序主入口和 Go 业务代码
@@ -79,8 +79,7 @@ go test ./...
 
 - 开发文档：[`开发文档.md`](./开发文档.md)
 - 软件说明：[`软件说明文档.md`](./软件说明文档.md)
-- 当前冻结版本说明：[`docs/当前冻结版本与封包说明-20260509.md`](./docs/当前冻结版本与封包说明-20260509.md)
-- 维护总纲：[`docs/maintenance-notes/2026-05-08-maintenance-master-outline-v3.md`](./docs/maintenance-notes/2026-05-08-maintenance-master-outline-v3.md)
+
 
 ## 说明
 
