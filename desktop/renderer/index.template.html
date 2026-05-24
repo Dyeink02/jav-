@@ -1,0 +1,90 @@
+<!-- Active desktop HTML template shell. -->
+<!--
+  ============================================================
+  index.template.html - 前端HTML模板壳
+  ============================================================
+  作用: 定义全局页面骨架(导航栏、背景、光效)，不含三大板块的具体内容。
+  
+  组装流程: scripts/assemble-html.js 读取此模板，
+           将6个 {placeholder} 替换为 partials/ 目录下的实际内容，
+           生成最终的 index.html。
+  
+  布局结构:
+    workspace-shell > workspace-content
+      ├── nav.workspace-topbar  (顶部导航，三标签切换)
+      ├── [CRAWLER_HERO]  → partials/crawler-hero.html  (爬虫头部)
+      ├── [CRAWLER_BODY]  → partials/crawler-body.html  (爬虫主体)
+      ├── [ORGANIZER_HERO] → partials/organizer-hero.html (整理头部)
+      ├── [ORGANIZER_BODY] → partials/organizer-body.html (整理主体)
+      ├── [SUBSCRIPTION_HERO] → partials/subscription-hero.html (订阅头部)
+      └── [SUBSCRIPTION_BODY] → partials/subscription-body.html (订阅主体)
+  
+  交互逻辑:
+    - 三大板块通过 workspace-pane.hidden 控制显隐
+    - renderer.js 监听 #nav-crawler / #nav-organizer / #nav-subscription 点击切换
+    - 单页应用(SPA)模式，无路由跳转
+  
+  依赖: styles.css (12个CSS合并) + bundle.js (18个JS合并)
+-->
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JAV自动集成源</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <!-- 全页面装饰层：背景、噪点、双色光晕 -->
+    <div class="page-backdrop"></div>
+    <div class="page-noise"></div>
+    <div class="page-glow glow-coral"></div>
+    <div class="page-glow glow-cyan"></div>
+
+    <!-- .shell 是最外层容器，承载所有UI -->
+    <div class="shell">
+      <div class="workspace-shell">
+        <!--
+          顶部导航栏
+          - .workspace-topbar-brand: 产品名称
+          - .workspace-topbar-tabs: 三个标签按钮
+            #nav-crawler / #nav-organizer / #nav-subscription
+          - .is-active 标记当前激活标签
+        -->
+        <nav class="workspace-topbar">
+          <span class="workspace-topbar-brand">JAV 自动化工具</span>
+          <div class="workspace-topbar-tabs">
+            <button id="nav-crawler" class="workspace-nav-button is-active" type="button">JAV 爬虫</button>
+            <button id="nav-organizer" class="workspace-nav-button" type="button">视频整理</button>
+            <button id="nav-subscription" class="workspace-nav-button" type="button">AV 订阅</button>
+          </div>
+        </nav>
+
+        <!--
+          workspace-content 承载三个功能面板
+          通过 CSS display:none/block 切换显隐
+          每个面板以 <section class="workspace-pane"> 包裹
+        -->
+        <div class="workspace-content">
+
+<!-- CRAWLER_HERO -->
+
+<!-- CRAWLER_BODY -->
+
+<!-- ORGANIZER_HERO -->
+
+<!-- ORGANIZER_BODY -->
+
+<!-- SUBSCRIPTION_HERO -->
+
+<!-- SUBSCRIPTION_BODY -->
+
+        </div>
+      </div>
+    </div>
+
+    <!-- 单个入口：所有JS已合并到 bundle.js (18个源文件) -->
+    <script src="./bundle.js"></script>
+  </body>
+</html>
